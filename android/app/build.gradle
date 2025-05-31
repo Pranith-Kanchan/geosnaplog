@@ -111,6 +111,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation project(':react-native-vector-icons')
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
@@ -120,3 +121,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
