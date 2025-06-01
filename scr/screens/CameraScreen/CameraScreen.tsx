@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Image, StyleSheet, Alert, PermissionsAndroid, Platform } from 'react-native';
-import { launchCamera, CameraOptions, Asset } from 'react-native-image-picker';
+import { launchCamera, CameraOptions, Asset, launchImageLibrary } from 'react-native-image-picker';
 import { getCurrentCoordinates } from '../../services/locationService';
 import { addPhoto } from '../../services/firebaseService';
 import { Coordinates } from '../../types';
@@ -53,6 +53,32 @@ const CameraScreen: React.FC = () => {
             }
         }
         return true;
+    };
+
+    const pickImageFromGallery = async () => {
+        const options: CameraOptions = {
+            mediaType: 'photo',
+            quality: 0.7,
+            includeBase64: false,
+        };
+
+        launchImageLibrary(options, async (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.errorMessage) {
+                console.log('ImagePicker Error: ', response.errorMessage);
+            } else if (response.assets && response.assets[0].uri) {
+                const asset: Asset = response.assets[0];
+                setPhoto(asset.uri ?? null);
+
+                try {
+                    const coords = await getCurrentCoordinates();
+                    setLocation(coords);
+                } catch (error) {
+                    console.warn('Error getting location:', error);
+                }
+            }
+        });
     };
 
     const captureImage = async () => {
@@ -166,20 +192,29 @@ const CameraScreen: React.FC = () => {
                         </>
 
                         <Button
-                            mode="contained"
+                            mode="outlined"
                             onPress={captureImage}
-                            disabled={!hasCameraPermission}
-                            style={styles.button}
+                            textColor={colors.primary}
+                            style={styles.buttonGallery}
                             icon="camera"
                         >
-                            {photo ? 'Capture New Image' : 'Capture Image'}
+                            Capture New Image
+                        </Button>
+                        <Button
+                            mode="outlined"
+                            onPress={pickImageFromGallery}
+                            icon="image"
+                            textColor={colors.primary}
+                            style={styles.buttonGallery}
+                        >
+                            Select New Image from Gallery
                         </Button>
 
                         <Button
                             mode="contained"
                             onPress={uploadPhoto}
                             disabled={isUploading}
-                            style={styles.button}
+                            style={[styles.button, { marginTop: 25 }]}
                             loading={isUploading}
                             icon="cloud-upload"
                         >
@@ -194,15 +229,25 @@ const CameraScreen: React.FC = () => {
                         />
                         <Text variant="titleMedium" style={styles.titleMedium} >Geo-Tagged Photo Capture</Text>
                         <Text variant="titleSmall" style={styles.titleSmall} >Press the camera button to take a photo that will be saved with your GPS location</Text>
-                        {!photo && <Button
+                        {!photo && <View><Button
                             mode="contained"
                             onPress={captureImage}
-                            disabled={!hasCameraPermission}
                             style={styles.button}
                             icon="camera"
                         >
-                           Capture Image
-                        </Button>}
+                            Capture Image
+                        </Button>
+                            <Button
+                                mode="outlined"
+                                onPress={pickImageFromGallery}
+                                icon="image"
+                                textColor={colors.primary}
+                                style={styles.buttonGallery}
+                            >
+                                Select from Gallery
+                            </Button>
+                        </View>
+                        }
                     </Card.Content>
 
             }
@@ -223,7 +268,7 @@ const styles = StyleSheet.create({
     },
     card1: {
         marginBottom: 16,
-        borderStyle:'dotted',
+        borderStyle: 'dotted',
         borderWidth: 2,
         borderColor: colors.secondary,
         borderRadius: 10,
@@ -232,6 +277,9 @@ const styles = StyleSheet.create({
     button: {
         marginVertical: 8,
         backgroundColor: colors.primary,
+    }, buttonGallery: {
+        borderColor: colors.primary,
+        marginBottom: 7
     },
     buttondelte: {
         marginVertical: 8,
@@ -283,7 +331,7 @@ const styles = StyleSheet.create({
     }, titleMedium: {
         textAlign: 'center',
         color: colors.placeholder,
-        marginBottom:3
+        marginBottom: 3
     },
     titleSmall: {
         textAlign: 'center',

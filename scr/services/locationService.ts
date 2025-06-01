@@ -11,6 +11,7 @@ export const requestLocationPermission = async (): Promise<boolean> => {
   return granted === PermissionsAndroid.RESULTS.GRANTED;
 };
 
+
 export const getCurrentCoordinates = async (): Promise<Coordinates> => {
   const permissionGranted = await requestLocationPermission();
   if (!permissionGranted) {
