@@ -8,12 +8,15 @@ import { usePhotos } from '../../context/PhotoContext';
 import { Button, Card, Text, ActivityIndicator, Avatar } from 'react-native-paper';
 import placeholderImage from '../../assets/images/PhotouPloadPlaceholder.jpg';
 import colors from '../../utils/colors';
+import { useAddPhotoMutation } from '../../store/firebaseApi';
 
 const CameraScreen: React.FC = () => {
     const [photo, setPhoto] = useState<string | null>(null);
     const [location, setLocation] = useState<Coordinates | null>(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    // const [isUploading, setIsUploading] = useState(false);
+    const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+    const [addPhoto, { isLoading: isUploading }] = useAddPhotoMutation();
     const { refreshPhotos } = usePhotos();
     const [currentTime, setCurrentTime] = useState('');
     const userName = "John Doe";
@@ -70,12 +73,15 @@ const CameraScreen: React.FC = () => {
             } else if (response.assets && response.assets[0].uri) {
                 const asset: Asset = response.assets[0];
                 setPhoto(asset.uri ?? null);
+                setIsFetchingLocation(true);
 
                 try {
                     const coords = await getCurrentCoordinates();
                     setLocation(coords);
                 } catch (error) {
                     console.warn('Error getting location:', error);
+                } finally {
+                    setIsFetchingLocation(false);
                 }
             }
         });
@@ -102,46 +108,63 @@ const CameraScreen: React.FC = () => {
             } else if (response.assets && response.assets[0].uri) {
                 const asset: Asset = response.assets[0];
                 setPhoto(asset.uri ?? null);
+                setIsFetchingLocation(true);
 
                 try {
                     const coords = await getCurrentCoordinates();
                     setLocation(coords);
                 } catch (error) {
                     console.warn('Error getting location:', error);
+                } finally {
+                    setIsFetchingLocation(false);
                 }
             }
         });
     };
 
-    const deleteImage = () => {
-        setPhoto(null);
-        setLocation(null);
-    };
+  const deleteImage = () => {
+    Alert.alert(
+        'Delete Image',
+        'Are you sure you want to delete this image?',
+        [
+            {
+                text: 'Cancel',
+                style: 'cancel',
+            },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () => {
+                    setPhoto(null);
+                    setLocation(null);
+                },
+            },
+        ],
+        { cancelable: true }
+    );
+};
 
-    const uploadPhoto = async () => {
-        if (!photo || !location) {
-            Alert.alert('Error', 'Photo and location are required');
-            return;
-        }
+const uploadPhoto = async () => {
+  if (!photo || !location) {
+    Alert.alert('Error', 'Photo and location are required');
+    return;
+  }
 
-        try {
-            setIsUploading(true);
-            await addPhoto({
-                url: photo,
-                latitude: location.latitude,
-                longitude: location.longitude
-            });
-            Alert.alert('Success', 'Photo uploaded successfully');
-            setPhoto(null);
-            setLocation(null);
-            await refreshPhotos();
-        } catch (error) {
-            Alert.alert('Error', 'Failed to upload photo');
-            console.error(error);
-        } finally {
-            setIsUploading(false);
-        }
-    };
+  try {
+    await addPhoto({
+      url: photo,
+      latitude: location.latitude,
+      longitude: location.longitude
+    }).unwrap();
+    
+    Alert.alert('Success', 'Photo uploaded successfully');
+    setPhoto(null);
+    setLocation(null);
+  } catch (error) {
+    Alert.alert('Error', 'Failed to upload photo');
+    console.error(error);
+  }
+};
 
     useEffect(() => {
         const initialize = async () => {
@@ -167,18 +190,27 @@ const CameraScreen: React.FC = () => {
             {
                 photo ?
                     <Card.Content style={styles.card1}>
-                        {isUploading && <ActivityIndicator animating={true} style={styles.loader} />}
                         <>
                             <Card.Cover
                                 source={photo ? { uri: photo } : placeholderImage}
                                 style={styles.image}
                             />
 
-                            {location && (
-                                <Text style={styles.coordinates}>
-                                    Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                                </Text>
-                            )}
+                            <View style={styles.locationContainer}>
+                                {isFetchingLocation ? (
+                                    <View style={styles.loadingContainer}>
+                                        <ActivityIndicator animating={true} color={colors.primary} />
+                                        <Text style={styles.loadingText}>Fetching location...</Text>
+                                    </View>
+                                ) : location ? (
+                                    <Text style={styles.coordinates}>
+                                        Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                                    </Text>
+                                ) : (
+                                    <Text style={styles.errorText}>Location not available</Text>
+                                )}
+                            </View>
+                            
                             <Button
                                 mode="outlined"
                                 onPress={deleteImage}
@@ -233,6 +265,7 @@ const CameraScreen: React.FC = () => {
                             mode="contained"
                             onPress={captureImage}
                             style={styles.button}
+                            textColor={colors.white}
                             icon="camera"
                         >
                             Capture Image
@@ -277,7 +310,8 @@ const styles = StyleSheet.create({
     button: {
         marginVertical: 8,
         backgroundColor: colors.primary,
-    }, buttonGallery: {
+    }, 
+    buttonGallery: {
         borderColor: colors.primary,
         marginBottom: 7
     },
@@ -303,9 +337,28 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 8,
     },
-    loader: {
-        marginVertical: 16,
-    }, profileHeader: {
+    errorText: {
+        fontSize: 14,
+        color: colors.error,
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+    },
+    loadingText: {
+        fontSize: 14,
+        color: colors.primary,
+        marginLeft: 8,
+    },
+    locationContainer: {
+        minHeight: 30,
+        justifyContent: 'center',
+    },
+    profileHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
@@ -328,7 +381,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         lineHeight: 21,
         color: colors.primary
-    }, titleMedium: {
+    }, 
+    titleMedium: {
         textAlign: 'center',
         color: colors.placeholder,
         marginBottom: 3

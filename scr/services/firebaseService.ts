@@ -28,7 +28,7 @@ export const addPhoto = async (photoData: Omit<Photo, 'id' | 'timestamp'>): Prom
     return { 
       id: docRef.id, 
       ...photoData,
-      timestamp: new Date() 
+      timestamp: new Date().toISOString() 
     };
   } catch (error) {
     console.error('Error adding photo:', error);

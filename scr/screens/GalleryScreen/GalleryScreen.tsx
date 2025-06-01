@@ -11,19 +11,19 @@ import { Photo } from '../../types';
 import { usePhotos } from '../../context/PhotoContext';
 import PhotoModal from '../../components/PhotoModal';
 import colors from '../../utils/colors';
+import { useGetPhotosQuery } from '../../store/firebaseApi';
 
 const GalleryScreen: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const { photos, refreshPhotos } = usePhotos();
+  // const { photos, refreshPhotos } = usePhotos();
   const [refreshing, setRefreshing] = useState(false);
+  const { data: photos = [], isLoading, isFetching, refetch } = useGetPhotosQuery();
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await refreshPhotos();
-    setRefreshing(false);
+    await refetch();
   };
 
-  const formatDate = (date: Date): string => {
+  const formatDate = (date: string ): string => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -57,7 +57,7 @@ const GalleryScreen: React.FC = () => {
               />
               <View style={styles.textContainer}>
                 <Text variant="titleMedium" style={[styles.date, { color: colors.placeholder }]}>
-                  {formatDate(item.timestamp)}
+                  {formatDate(String(item.timestamp))}
                 </Text>
                 <View style={styles.locationContainer}>
                   <IconButton
@@ -66,7 +66,7 @@ const GalleryScreen: React.FC = () => {
                     iconColor={colors.primary}
                     style={styles.locationIcon}
                   />
-                  <Text variant="bodySmall" style={[styles.coordinates, { color: colors.darkGray}]}>
+                  <Text variant="bodySmall" style={[styles.coordinates, { color: colors.darkGray }]}>
                     {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
                   </Text>
                 </View>
@@ -115,7 +115,7 @@ const GalleryScreen: React.FC = () => {
         onClose={() => setSelectedPhoto(null)}
       />
 
-      {refreshing && (
+      {isFetching && (
         <ActivityIndicator
           animating={true}
           size="large"

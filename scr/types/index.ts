@@ -3,7 +3,7 @@ export type Photo = {
   url: string;
   latitude: number;
   longitude: number;
-  timestamp: Date;
+  timestamp: String;
 };
 
 export type Coordinates = {

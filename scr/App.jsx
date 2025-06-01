@@ -1,18 +1,18 @@
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as ReduxProvider } from 'react-redux';
 import AppNavigator from './navigation/AppNavigator';
-import { PhotoProvider } from './context/PhotoContext';
-
+import { store } from './store/store';
 
 const App = () => {
   return (
     <SafeAreaProvider>
-      <PaperProvider>
-        <PhotoProvider>
+      <ReduxProvider store={store}>
+        <PaperProvider>
           <AppNavigator />
-        </PhotoProvider>
-      </PaperProvider>
+        </PaperProvider>
+      </ReduxProvider>
     </SafeAreaProvider>
   );
 };

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Modal, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { Card, Text, Button } from 'react-native-paper';
 import { Photo, Region } from '../../types';
 import { usePhotos } from '../../context/PhotoContext';
 import PhotoModal from '../../components/PhotoModal';
+import { useGetPhotosQuery } from '../../store/firebaseApi';
 
 const MapScreen: React.FC = () => {
-  const { photos } = usePhotos();
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const { data: photos = [] } = useGetPhotosQuery();
   const [region, setRegion] = useState<Region>({
     latitude: 13.3528382,
     longitude: 74.6993023,
@@ -59,7 +59,6 @@ const MapScreen: React.FC = () => {
         photo={selectedPhoto}
         onClose={() => setSelectedPhoto(null)}
       />
-
     </View>
   );
 };
