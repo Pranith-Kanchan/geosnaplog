@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, Image, RefreshControl, StatusBar } from 'react-native';
+import {
+  Card,
+  Text,
+  ActivityIndicator,
+  Appbar,
+  IconButton
+} from 'react-native-paper';
 import { Photo } from '../../types';
 import { usePhotos } from '../../context/PhotoContext';
+import PhotoModal from '../../components/PhotoModal';
+import colors from '../../utils/colors';
 
 const GalleryScreen: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
@@ -15,81 +24,105 @@ const GalleryScreen: React.FC = () => {
   };
 
   const formatDate = (date: Date): string => {
-    return date.toLocaleString();
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.white }]}>
+      <StatusBar backgroundColor={colors.primary} />
+      <Appbar.Header style={{ backgroundColor: 'rgba(214, 230, 255, 0.0.5)' }}>
+        <Appbar.Content title="Photo Gallery" />
+        <Appbar.Action icon="magnify" onPress={() => { }} />
+      </Appbar.Header>
+
       <FlatList
         data={photos}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.photoItem}
+          <Card
+            style={[styles.card, { backgroundColor: colors.white }]}
             onPress={() => setSelectedPhoto(item)}
           >
-            <Image
-              source={{ uri: item.url }}
-              style={styles.thumbnail}
-            />
-            <View style={styles.photoInfo}>
-              <Text style={styles.date}>{formatDate(item.timestamp)}</Text>
-              <Text style={styles.coordinates}>
-                {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
-              </Text>
-            </View>
-          </TouchableOpacity>
+            <Card.Content style={styles.cardContent}>
+              <Image
+                source={item.url ? { uri: item.url } : require('../../assets/images/avatar.jpg')}
+                style={styles.thumbnail}
+              />
+              <View style={styles.textContainer}>
+                <Text variant="titleMedium" style={[styles.date, { color: colors.placeholder }]}>
+                  {formatDate(item.timestamp)}
+                </Text>
+                <View style={styles.locationContainer}>
+                  <IconButton
+                    icon="map-marker"
+                    size={16}
+                    iconColor={colors.primary}
+                    style={styles.locationIcon}
+                  />
+                  <Text variant="bodySmall" style={[styles.coordinates, { color: colors.darkGray}]}>
+                    {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+                  </Text>
+                </View>
+              </View>
+              <IconButton
+                icon="chevron-right"
+                size={24}
+                iconColor={colors.black}
+              />
+            </Card.Content>
+          </Card>
         )}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <IconButton
+              icon="image-off"
+              size={78}
+              iconColor={colors.lightGray}
+            />
+            <Text variant="titleMedium" style={{ color: 'ligghtgray' }}>
+              No photos available
+            </Text>
+            {/* <Button
+              mode="contained"
+              onPress={onRefresh}
+              style={styles.refreshButton}
+              icon="refresh"
+            >
+              Refresh
+            </Button> */}
+          </View>
         }
       />
 
-      <Modal
+      <PhotoModal
         visible={!!selectedPhoto}
-        transparent={true}
-        onRequestClose={() => setSelectedPhoto(null)}
-        animationType="slide"
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setSelectedPhoto(null)}
-            activeOpacity={1}
-          />
-          <View style={styles.modalContent}>
-            {selectedPhoto && (
-              <>
-                <Image
-                  source={{ uri: selectedPhoto.url }}
-                  style={styles.modalImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.photoInfo}>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Latitude: </Text>
-                    {selectedPhoto.latitude.toFixed(6)}
-                  </Text>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Longitude: </Text>
-                    {selectedPhoto.longitude.toFixed(6)}
-                  </Text>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Date: </Text>
-                    {formatDate(selectedPhoto.timestamp)}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setSelectedPhoto(null)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        photo={selectedPhoto}
+        onClose={() => setSelectedPhoto(null)}
+      />
+
+      {refreshing && (
+        <ActivityIndicator
+          animating={true}
+          size="large"
+          style={styles.loader}
+          color={colors.primary}
+        />
+      )}
     </View>
   );
 };
@@ -97,84 +130,67 @@ const GalleryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
   },
-  photoItem: {
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  card: {
+    marginVertical: 8,
+    borderRadius: 12,
+    elevation: 1,
+  },
+  cardContent: {
     flexDirection: 'row',
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    padding: 12,
+    alignItems: 'center',
   },
   thumbnail: {
     width: 80,
     height: 80,
-    borderRadius: 4,
+    borderRadius: 8,
   },
-  photoInfo: {
+  textContainer: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 16,
     justifyContent: 'center',
   },
   date: {
-    fontSize: 14,
+    marginBottom: 4,
     fontWeight: '500',
-    marginBottom: 5,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationIcon: {
+    margin: 0,
+    marginLeft: -8,
+    marginRight: -4,
   },
   coordinates: {
-    fontSize: 12,
-    color: '#666',
+    opacity: 0.8,
   },
-  modalContainer: {
+  divider: {
+    marginVertical: 4,
+    height: 1,
+  },
+  loader: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -20,
+    marginTop: -20,
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 32,
   },
-  modalBackground: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  modalImage: {
-    width: '100%',
-    height: 300,
-    marginBottom: 15,
-    borderRadius: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    marginBottom: 8,
-    color: '#444',
-  },
-  infoLabel: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  closeButton: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#333',
-    borderRadius: 5,
-  },
-  closeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  refreshButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
   },
 });
 

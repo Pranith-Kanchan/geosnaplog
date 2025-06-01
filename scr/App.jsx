@@ -7,7 +7,7 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <PhotoProvider>
-        <AppNavigator/>
+        <AppNavigator />
       </PhotoProvider>
     </SafeAreaProvider>
   );

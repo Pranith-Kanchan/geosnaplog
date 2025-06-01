@@ -26,7 +26,6 @@ const MainTabs = () => {
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: string = 'help';
-
                     if (route.name === 'Camera') {
                         iconName = focused ? 'camera' : 'camera-outline';
                     } else if (route.name === 'Map') {
@@ -37,11 +36,12 @@ const MainTabs = () => {
 
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: 'tomato',
+                tabBarActiveTintColor: '#007cff',
                 tabBarInactiveTintColor: 'gray',
+                headerShown: false, 
             })}
         >
-            <Tab.Screen name="Camera" component={CameraScreen} />
+            <Tab.Screen name="Camera" component={CameraScreen}  />
             <Tab.Screen name="Map" component={MapScreen} />
             <Tab.Screen name="Gallery" component={GalleryScreen} />
         </Tab.Navigator>

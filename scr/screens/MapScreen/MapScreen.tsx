@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Button ,Image} from 'react-native';
+import { View, StyleSheet, Modal, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { Card, Text, Button } from 'react-native-paper';
 import { Photo, Region } from '../../types';
 import { usePhotos } from '../../context/PhotoContext';
+import PhotoModal from '../../components/PhotoModal';
 
 const MapScreen: React.FC = () => {
   const { photos } = usePhotos();
@@ -26,13 +28,10 @@ const MapScreen: React.FC = () => {
     }
   }, [photos]);
 
-  const formatDate = (date: Date): string => {
-    return date.toLocaleString();
-  };
 
   return (
     <View style={styles.container}>
-      <MapView 
+      <MapView
         style={styles.map}
         region={region}
         onRegionChangeComplete={setRegion}
@@ -47,59 +46,20 @@ const MapScreen: React.FC = () => {
             onPress={() => setSelectedPhoto(photo)}
           >
             <View style={styles.marker}>
-              <Image 
-                source={{ uri: photo.url }} 
+              <Image
+                source={{ uri: photo.url }}
                 style={styles.markerImage}
               />
             </View>
           </Marker>
         ))}
       </MapView>
-
-      <Modal
+      <PhotoModal
         visible={!!selectedPhoto}
-        transparent={true}
-        onRequestClose={() => setSelectedPhoto(null)}
-        animationType="slide"
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.modalBackground}
-            onPress={() => setSelectedPhoto(null)}
-            activeOpacity={1}
-          />
-          <View style={styles.modalContent}>
-            {selectedPhoto && (
-              <>
-                <Image 
-                  source={{ uri: selectedPhoto.url }} 
-                  style={styles.modalImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.photoInfo}>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Latitude: </Text>
-                    {selectedPhoto.latitude.toFixed(6)}
-                  </Text>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Longitude: </Text>
-                    {selectedPhoto.longitude.toFixed(6)}
-                  </Text>
-                  <Text style={styles.infoText}>
-                    <Text style={styles.infoLabel}>Date: </Text>
-                    {formatDate(selectedPhoto.timestamp)}
-                  </Text>
-                </View>
-                <Button 
-                  title="Close" 
-                  onPress={() => setSelectedPhoto(null)} 
-                  color="#333"
-                />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        photo={selectedPhoto}
+        onClose={() => setSelectedPhoto(null)}
+      />
+
     </View>
   );
 };
@@ -118,52 +78,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   markerImage: {
     width: 40,
     height: 40,
     borderRadius: 20,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalBackground: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  modalImage: {
-    width: '100%',
-    height: 300,
-    marginBottom: 15,
-    borderRadius: 8,
-  },
-  photoInfo: {
-    width: '100%',
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  infoText: {
-    fontSize: 14,
-    marginBottom: 8,
-    color: '#444',
-  },
   infoLabel: {
     fontWeight: 'bold',
-    color: '#333',
   },
 });
 
