@@ -72,21 +72,16 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   marker: {
-    padding: 5,
     backgroundColor: 'white',
-    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ddd',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   markerImage: {
     width: 40,
     height: 40,
-    borderRadius: 20,
   },
   infoLabel: {
     fontWeight: 'bold',

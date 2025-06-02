@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, Alert, PermissionsAndroid, Platform } from 'react-native';
+import { View, StyleSheet, Alert, PermissionsAndroid, Platform } from 'react-native';
 import { launchCamera, CameraOptions, Asset, launchImageLibrary } from 'react-native-image-picker';
 import { getCurrentCoordinates } from '../../services/locationService';
-import { addPhoto } from '../../services/firebaseService';
 import { Coordinates } from '../../types';
-import { usePhotos } from '../../context/PhotoContext';
 import { Button, Card, Text, ActivityIndicator, Avatar } from 'react-native-paper';
 import placeholderImage from '../../assets/images/PhotouPloadPlaceholder.jpg';
 import colors from '../../utils/colors';
@@ -14,10 +12,8 @@ const CameraScreen: React.FC = () => {
     const [photo, setPhoto] = useState<string | null>(null);
     const [location, setLocation] = useState<Coordinates | null>(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
-    // const [isUploading, setIsUploading] = useState(false);
     const [isFetchingLocation, setIsFetchingLocation] = useState(false);
     const [addPhoto, { isLoading: isUploading }] = useAddPhotoMutation();
-    const { refreshPhotos } = usePhotos();
     const [currentTime, setCurrentTime] = useState('');
     const userName = "John Doe";
 
@@ -122,49 +118,49 @@ const CameraScreen: React.FC = () => {
         });
     };
 
-  const deleteImage = () => {
-    Alert.alert(
-        'Delete Image',
-        'Are you sure you want to delete this image?',
-        [
-            {
-                text: 'Cancel',
-                style: 'cancel',
-            },
-            {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () => {
-                    setPhoto(null);
-                    setLocation(null);
+    const deleteImage = () => {
+        Alert.alert(
+            'Delete Image',
+            'Are you sure you want to delete this image?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
                 },
-            },
-        ],
-        { cancelable: true }
-    );
-};
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                        setPhoto(null);
+                        setLocation(null);
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    };
 
-const uploadPhoto = async () => {
-  if (!photo || !location) {
-    Alert.alert('Error', 'Photo and location are required');
-    return;
-  }
+    const uploadPhoto = async () => {
+        if (!photo || !location) {
+            Alert.alert('Error', 'Photo and location are required');
+            return;
+        }
 
-  try {
-    await addPhoto({
-      url: photo,
-      latitude: location.latitude,
-      longitude: location.longitude
-    }).unwrap();
-    
-    Alert.alert('Success', 'Photo uploaded successfully');
-    setPhoto(null);
-    setLocation(null);
-  } catch (error) {
-    Alert.alert('Error', 'Failed to upload photo');
-    console.error(error);
-  }
-};
+        try {
+            await addPhoto({
+                url: photo,
+                latitude: location.latitude,
+                longitude: location.longitude
+            }).unwrap();
+
+            Alert.alert('Success', 'Photo uploaded successfully');
+            setPhoto(null);
+            setLocation(null);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to upload photo');
+            console.error(error);
+        }
+    };
 
     useEffect(() => {
         const initialize = async () => {
@@ -210,7 +206,7 @@ const uploadPhoto = async () => {
                                     <Text style={styles.errorText}>Location not available</Text>
                                 )}
                             </View>
-                            
+
                             <Button
                                 mode="outlined"
                                 onPress={deleteImage}
@@ -282,7 +278,6 @@ const uploadPhoto = async () => {
                         </View>
                         }
                     </Card.Content>
-
             }
         </View>
     );
@@ -310,7 +305,7 @@ const styles = StyleSheet.create({
     button: {
         marginVertical: 8,
         backgroundColor: colors.primary,
-    }, 
+    },
     buttonGallery: {
         borderColor: colors.primary,
         marginBottom: 7
@@ -381,7 +376,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         lineHeight: 21,
         color: colors.primary
-    }, 
+    },
     titleMedium: {
         textAlign: 'center',
         color: colors.placeholder,
